@@ -344,8 +344,6 @@ class Scratch3LooksBlocks {
             looks_sayforsecs: this.sayforsecs,
             looks_think: this.think,
             looks_thinkforsecs: this.thinkforsecs,
-            looks_shout: this.shout,
-            looks_shoutforsecs: this.shoutforsecs,
             looks_setFont: this.setFont,
             looks_setColor: this.setColor,
             looks_setShape: this.setShape,
@@ -535,12 +533,6 @@ class Scratch3LooksBlocks {
             }, 1000 * args.SECS);
         });
     }
-    shout (args, util) {
-        // @TODO in 2.0 calling say/think resets the right/left bias of the bubble
-        const message = (args.MESSAGE).toUpperCase();
-        this._say(message, util.target);
-    }
-
     show (args, util) {
         util.target.setVisible(true);
         this._renderBubble(util.target);
