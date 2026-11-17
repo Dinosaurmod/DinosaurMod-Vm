@@ -548,6 +548,8 @@ class JSGenerator {
         switch (node.kind) {
         case 'args.boolean':
             return new TypedInput(`toBoolean(p${node.index})`, TYPE_BOOLEAN);
+        case 'args.color':
+        case 'args.number':
         case 'args.stringNumber':
             return new TypedInput(`p${node.index}`, TYPE_UNKNOWN);
 

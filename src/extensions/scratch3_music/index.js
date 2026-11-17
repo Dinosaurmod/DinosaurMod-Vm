@@ -949,9 +949,15 @@ class Scratch3MusicBlocks {
                 {
                     opcode: 'stopAllSounds',
                     blockType: BlockType.COMMAND,
-                    text: 'stop all sounds',
+                    text: 'stop all [SOUNDS]',
                     //hideFromPalette: true,
-                    arguments: {}
+                    arguments: {
+                        SOUNDS: {
+                            type: ArgumentType.NUMBER,
+                            menu: 'SOUNDS',
+                            defaultValue: 3
+                        }
+                    }
                 },
             ],
             menus: {
@@ -962,6 +968,23 @@ class Scratch3MusicBlocks {
                 INSTRUMENT: {
                     acceptReporters: true,
                     items: this._buildMenu(this.INSTRUMENT_INFO)
+                },
+                SOUNDS: {
+                    acceptReporters: false,
+                    items: [
+                        {
+                            text: "instruments",
+                            value: 1
+                        },
+                        {
+                            text: "drums",
+                            value: 2
+                        },
+                        {
+                            text: "sounds",
+                            value: 3
+                        }
+                    ]
                 }
             }
         };
@@ -1053,6 +1076,12 @@ class Scratch3MusicBlocks {
         this._concurrencyCounter++;
         player.once('stop', () => {
             this._concurrencyCounter--;
+
+            const index = this._allCurrentlyRunningSounds.indexOf(player);
+            if (index > -1) {
+                this._allCurrentlyRunningSounds.splice(index, 1);
+            }
+            this._allCUtils[player] = null;
         });
 
         player.play();
@@ -1060,6 +1089,12 @@ class Scratch3MusicBlocks {
         player.connect({getInputNode () {
             return volumeGain;
         }});
+
+        this._allCurrentlyRunningSounds.push({
+            player: player,
+            type: 2 // 1: instruments, 2: drums
+        });
+        this._allCUtils[player] = util;
     }
 
     /**
@@ -1149,7 +1184,7 @@ class Scratch3MusicBlocks {
      * @param {any} customInstrument - when the value isn't null, it replaces the current instrument with itself
      * @private
      */
-    _playNote (util, note, durationSec, customInstrument = null, usesPicker) {
+    _playNote (util, note, durationSec, customInstrument = null, usesPicker = false) {
         if (util.runtime.audioEngine === null) return;
         if (util.target.sprite.soundBank === null) return;
 
@@ -1234,21 +1269,24 @@ class Scratch3MusicBlocks {
         player.outputNode.stop(releaseEnd);
 
         if (!usesPicker) {
-            this._allCurrentlyRunningSounds.push(player);
+            this._allCurrentlyRunningSounds.push({
+                player: player,
+                type: 1 // 1: instruments, 2: drums
+            });
             /*if (!this._stackTimerNeedsInit(util)) */this._allCUtils[player] = util
         };
     }
 
-    _stopAllSounds () {
+    _stopAllSounds (type) {
         for (const sound of this._allCurrentlyRunningSounds) {
-            if ('outputNode' in sound) {
-                sound.stop();
+            if ('outputNode' in sound.player && (sound.type === type || type === 3)) {
+                sound.player.stop();
             }
-            let Util = this._allCUtils[sound];
-            if (Util && 'stackFrame' in Util) {
-                console.log(Util.stackFrame)
-                _forceStopStackTimer(Util)
-                //Util.stackFrame.timer.setTimer((Util.stackFrame.duration * 1000) - 0.01)
+            let Util = this._allCUtils[sound.player];
+            if (Util.hasOwnProperty('thread')) {
+                if (Util.hasOwnProperty('goToNextBlock')) {
+                    Util.thread.goToNextBlock();
+                }
             }
         }
     }
@@ -1335,16 +1373,6 @@ class Scratch3MusicBlocks {
         const timeElapsed = util.stackFrame.timer.timeElapsed();
         if (timeElapsed < util.stackFrame.duration * 1000) {
             util.yield();
-        }
-    }
-
-    //THREAD: stopThisScript
-    _forceStopStackTimer (util) {
-        if (!util) return;
-        if (util.hasOwnProperty('stackFrame')) {
-            if (util.hasOwnProperty('timer')) {
-                util.stackFrame.duration = util.stackFrame.timer.timeElapsed() - 0.05
-            }
         }
     }
 
@@ -1452,8 +1480,8 @@ class Scratch3MusicBlocks {
         return 60;
     }
 
-    stopAllSounds () {
-        return this._stopAllSounds();
+    stopAllSounds (args) {
+        return this._stopAllSounds(args.SOUNDS);
     }
 }
 

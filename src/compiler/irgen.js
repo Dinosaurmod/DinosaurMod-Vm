@@ -245,7 +245,46 @@ class ScriptTreeGenerator {
                 kind: 'math.polygon',
                 points
             };
-
+        
+        case 'argument_reporter_color': {
+            const name = block.fields.VALUE.value;
+            // lastIndexOf because multiple parameters with the same name will use the value of the last definition
+            const index = this.script.arguments.lastIndexOf(name);
+            if (index === -1) {
+                return {
+                    kind: 'constant',
+                    value: '#ff0000'
+                };
+            }
+            return {
+                kind: 'args.color',
+                index: index
+            };
+        }
+        case 'argument_reporter_number': {
+            const name = block.fields.VALUE.value;
+            // lastIndexOf because multiple parameters with the same name will use the value of the last definition
+            const index = this.script.arguments.lastIndexOf(name);
+            if (index === -1) {
+                // iykyk
+                if (name.toLowerCase() === 'the heat death of the universe') {
+                    return {
+                        kind: 'constant',
+                        value: 2036
+                    };
+                }
+            }
+            if (index === -1) {
+                return {
+                    kind: 'constant',
+                    value: 0
+                };
+            }
+            return {
+                kind: 'args.number',
+                index: index
+            };
+        }
         case 'argument_reporter_string_number': {
             const name = block.fields.VALUE.value;
             // lastIndexOf because multiple parameters with the same name will use the value of the last definition
