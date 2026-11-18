@@ -1280,9 +1280,9 @@ class Scratch3MusicBlocks {
     _stopAllSounds (type) {
         for (const sound of this._allCurrentlyRunningSounds) {
             let Util = this._allCUtils[sound.player];
-            if (Util) {
+            if (Util && (sound.type === type || type === 3)) {
                 if (Util.hasOwnProperty('thread')) {
-                    if (Util.hasOwnProperty('goToNextBlock')) {
+                    if (Util.thread.hasOwnProperty('goToNextBlock')) {
                         Util.thread.goToNextBlock();
                     }
                 }
